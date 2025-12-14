@@ -1,0 +1,1142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Just M’Nails — Suivi RDV</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    :root{
+      --bg1:#f7e9ea;
+      --bg2:#f3dfe2;
+      --card:#ffffffcc;
+      --stroke:#ead7d7;
+      --text:#231f20;
+      --muted:#6c5f62;
+      --brand:#b08a78;
+      --brand2:#d3b2a5;
+      --danger:#b14b4b;
+      --ok:#2f7a3f;
+      --shadow: 0 12px 34px rgba(50,25,25,.10);
+      --radius: 22px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background: radial-gradient(1200px 700px at 20% -10%, #fff 0%, var(--bg1) 35%, var(--bg2) 100%);
+      min-height:100vh;
+      padding:18px;
+    }
+
+    .wrap{max-width:980px;margin:0 auto;}
+    .top{
+      display:flex; gap:14px; align-items:center;
+      padding:14px 16px;
+      background:linear-gradient(180deg, #fff8 0%, #fff5 100%);
+      border:1px solid var(--stroke);
+      border-radius:28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .top .logo{
+      width:64px;height:64px; border-radius:18px;
+      overflow:hidden;
+      border:1px solid var(--stroke);
+      box-shadow: 0 10px 22px rgba(70,30,30,.08);
+      flex:0 0 auto;
+      background:#fff;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .top .logo img{width:100%;height:100%;object-fit:cover;display:block;}
+    .top .title{display:flex;flex-direction:column; gap:2px}
+    .top .title h1{margin:0;font-size:22px;letter-spacing:.2px}
+    .top .title p{margin:0;color:var(--muted);font-size:13px}
+    .version{margin-top:6px;color:var(--muted);font-size:12px}
+
+    .grid{display:grid; grid-template-columns: 1fr; gap:14px; margin-top:14px;}
+    .card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+      backdrop-filter: blur(10px);
+    }
+    .card h2{margin:0 0 10px 0; font-size:18px;}
+    .hint{color:var(--muted); font-size:13px; line-height:1.35; margin-top:8px;}
+    .row{display:flex; gap:10px; flex-wrap:wrap;}
+    .row > *{flex:1 1 160px;}
+    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px;}
+    input, select, textarea{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid #e7d7d9;
+      outline:none;
+      font-size:15px;
+      background:#fff;
+    }
+    textarea{min-height:88px; resize:vertical;}
+
+    .btn{
+      width:100%;
+      border:none;
+      padding:12px 14px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:15px;
+      cursor:pointer;
+      background: linear-gradient(180deg, var(--brand2) 0%, var(--brand) 100%);
+      color:#fff;
+      box-shadow: 0 10px 24px rgba(100,60,40,.18);
+    }
+    .btn:active{transform: translateY(1px);}
+    .btn.secondary{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--stroke);
+      box-shadow:none;
+    }
+    .btn.danger{
+      background: linear-gradient(180deg, #d96a6a 0%, var(--danger) 100%);
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:10px;
+      margin-top:12px;
+    }
+    @media(min-width:900px){
+      .tabs{grid-template-columns: repeat(5, 1fr);}
+    }
+    .tab{
+      padding:12px 10px;
+      border-radius:16px;
+      border:1px solid var(--stroke);
+      background:#fff;
+      cursor:pointer;
+      font-weight:900;
+      text-align:center;
+      color:#3a2f30;
+      user-select:none;
+    }
+    .tab.active{
+      background: linear-gradient(180deg, var(--brand2) 0%, var(--brand) 100%);
+      color:#fff;
+      border-color:transparent;
+    }
+
+    .status{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+      white-space:pre-wrap;
+    }
+    .status.ok{color:var(--ok)}
+    .status.err{color:var(--danger)}
+    .hidden{display:none !important;}
+
+    .list{display:flex; flex-direction:column; gap:10px; margin-top:10px;}
+    .item{
+      background:#fff;
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      padding:12px;
+    }
+    .item .topline{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    }
+    .item .title{font-weight:900;}
+    .small{color:var(--muted); font-size:13px; margin-top:4px;}
+    .pill{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid var(--stroke);
+      background:#fff;
+      color:var(--muted);
+    }
+    .pill.done{border-color:#bfe0c6; color:var(--ok);}
+    .pill.pending{border-color:#f0d6b7; color:#8a5a1e;}
+
+    .actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+    .actions button{flex:1 1 140px;}
+
+    .totline{margin-top:10px;font-weight:900;font-size:16px;}
+    .hr{height:1px;background:var(--stroke);margin:14px 0;}
+
+    .welcome{
+      text-align:center;
+      padding:18px 10px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.4;
+    }
+    .welcome b{color:var(--text)}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="logo">
+        <img src="Logo.png" alt="Just M’Nails"
+          onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=&quot;font-weight:900;color:#5a4a4c; font-size:13px; padding:8px;&quot;>Just<br>M’Nails</div>';">
+      </div>
+      <div class="title">
+        <h1>Just M’Nails</h1>
+        <p>Suivi RDV · Photos · Clientes · Statistiques</p>
+        <div class="version">Version: v2025-12-14 (UI clean + suppressions)</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="loginCard">
+        <h2>Connexion</h2>
+
+        <div class="welcome" id="welcomeMsg">
+          Connecte-toi pour accéder à <b>RDV</b>, <b>Clientes</b>, <b>Historique</b>, <b>Stats</b> et <b>Catalogue</b>.
+        </div>
+
+        <label>Email</label>
+        <input id="email" type="email" placeholder="ex: maelle@email.com" autocomplete="email" />
+
+        <label>Mot de passe</label>
+        <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn" id="btnLogin">Se connecter</button>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn secondary hidden" id="btnLogout">Se déconnecter</button>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn danger hidden" id="btnPurge">Purger session (si bug)</button>
+        </div>
+
+        <div class="status" id="loginStatus">—</div>
+
+        <div class="hint">
+          Astuce cache: ajoute <b>?v=20251214</b> à l’URL si Netlify affiche une ancienne version.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="appArea" style="margin-top:14px; display:none;">
+      <div class="tabs">
+        <div class="tab active" data-tab="rdv">RDV</div>
+        <div class="tab" data-tab="history">Historique</div>
+        <div class="tab" data-tab="clients">Clientes</div>
+        <div class="tab" data-tab="stats">Stats</div>
+        <div class="tab" data-tab="catalog">Catalogue</div>
+      </div>
+
+      <!-- RDV -->
+      <section id="tab-rdv" style="margin-top:14px;">
+        <h2>Prise de RDV</h2>
+
+        <div class="row">
+          <div>
+            <label>Cliente</label>
+            <select id="rdvClient"></select>
+          </div>
+          <div>
+            <label>Date & heure</label>
+            <input id="rdvDate" type="datetime-local" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Statut</label>
+            <select id="rdvStatus">
+              <option value="done">Fait</option>
+              <option value="pending">À faire</option>
+            </select>
+          </div>
+          <div>
+            <label>Posté (Instagram/TikTok)</label>
+            <select id="rdvPosted">
+              <option value="false">Non</option>
+              <option value="true">Oui</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Notes (optionnel)</label>
+        <textarea id="rdvNotes" placeholder="Notes…"></textarea>
+
+        <div class="hr"></div>
+
+        <h2>Prestations (multi)</h2>
+        <div class="row">
+          <div>
+            <label>Prestation (depuis Catalogue)</label>
+            <select id="svcPick"></select>
+          </div>
+          <div>
+            <label>Quantité</label>
+            <input id="svcQty" type="number" min="1" value="1" />
+          </div>
+          <div>
+            <label>Prix (optionnel)</label>
+            <input id="svcPriceOverride" type="number" step="0.01" placeholder="laisser vide = prix catalogue" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn secondary" id="btnAddLine">Ajouter la prestation</button>
+        </div>
+
+        <div class="list" id="linesList"></div>
+        <div class="totline" id="rdvTotal">Total RDV : 0.00 €</div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn" id="btnSaveRDV">Enregistrer RDV</button>
+        </div>
+
+        <div class="status" id="rdvStatusMsg">—</div>
+      </section>
+
+      <!-- Historique -->
+      <section id="tab-history" class="hidden" style="margin-top:14px;">
+        <h2>Historique RDV</h2>
+
+        <div class="row">
+          <div>
+            <label>Filtrer par cliente</label>
+            <select id="histClient"></select>
+          </div>
+          <div>
+            <label>Filtrer par statut</label>
+            <select id="histStatus">
+              <option value="all">Tous</option>
+              <option value="done">Fait</option>
+              <option value="pending">À faire</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn secondary" id="btnRefreshHistory">Rafraîchir</button>
+        </div>
+
+        <div class="small" id="histSummary">—</div>
+        <div class="status" id="histMsg">—</div>
+        <div class="list" id="histList"></div>
+      </section>
+
+      <!-- Clientes -->
+      <section id="tab-clients" class="hidden" style="margin-top:14px;">
+        <h2>Clientes</h2>
+
+        <div class="row">
+          <div>
+            <label>Nom</label>
+            <input id="clientName" placeholder="Ex: Duranton" />
+          </div>
+          <div>
+            <label>Téléphone (optionnel)</label>
+            <input id="clientPhone" placeholder="Ex: 06…" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="btnAddClient">Ajouter cliente</button>
+        </div>
+
+        <div class="status" id="clientMsg">—</div>
+        <div class="list" id="clientList"></div>
+      </section>
+
+      <!-- Stats -->
+      <section id="tab-stats" class="hidden" style="margin-top:14px;">
+        <h2>Statistiques</h2>
+        <div class="small" id="statsSummary">—</div>
+        <div class="status" id="statsMsg">—</div>
+        <div class="list" id="statsTop"></div>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn secondary" id="btnRefreshStats">Rafraîchir stats</button>
+        </div>
+      </section>
+
+      <!-- Catalogue -->
+      <section id="tab-catalog" class="hidden" style="margin-top:14px;">
+        <h2>Catalogue prestations</h2>
+
+        <div class="row">
+          <div>
+            <label>Nom prestation</label>
+            <input id="svcName" placeholder="Ex: Pose gel X" />
+          </div>
+          <div>
+            <label>Prix (€)</label>
+            <input id="svcPrice" type="number" step="0.01" placeholder="Ex: 30" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="btnAddService">Ajouter prestation</button>
+        </div>
+
+        <div class="status" id="svcMsg">—</div>
+        <div class="list" id="svcList"></div>
+      </section>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ====== CONFIG PRIVÉE ======
+  const SUPABASE_URL = "https://kggcbbgopjitcdjpayst.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnZ2NiYmdvcGppdGNkanBheXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2NTUyNjEsImV4cCI6MjA4MTIzMTI2MX0.jr4IFoAV3cyA8uJhnsVm0WR-7O77QptqtZ9wN8G1rVY";
+
+  const $ = (id) => document.getElementById(id);
+  function setStatus(el, msg, kind=""){ el.textContent = msg; el.className = "status " + kind; }
+  function euro(n){ const v = Number(n || 0); return v.toFixed(2) + " €"; }
+  function escapeHtml(str){
+    return String(str ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+  function formatFRDateFromAny(val){
+    try{
+      const d = (val instanceof Date) ? val : new Date(val);
+      if (isNaN(d.getTime())) return "—";
+      const pad = (x)=> String(x).padStart(2,"0");
+      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }catch{ return "—"; }
+  }
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:false }
+  });
+
+  // ====== AUTH UI (les 3 idées) ======
+  function showLoggedOutUI(){
+    $("appArea").style.display = "none";
+    $("btnLogout").classList.add("hidden");
+    $("btnPurge").classList.add("hidden");
+    $("btnLogin").classList.remove("hidden");
+    $("welcomeMsg").classList.remove("hidden");
+  }
+  function showLoggedInUI(){
+    $("appArea").style.display = "block";
+    $("btnLogout").classList.remove("hidden");
+    $("btnPurge").classList.remove("hidden");
+    $("btnLogin").classList.add("hidden");
+    $("welcomeMsg").classList.add("hidden");
+  }
+
+  async function refreshAuthUI(){
+    try{
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      if (!session){
+        showLoggedOutUI();
+        setStatus($("loginStatus"), "Non connecté.", "");
+        return null;
+      }
+      showLoggedInUI();
+      setStatus($("loginStatus"), "Connexion OK.", "ok");
+      return session;
+    }catch(e){
+      showLoggedOutUI();
+      setStatus($("loginStatus"), "Erreur session: " + e.message, "err");
+      return null;
+    }
+  }
+
+  // ====== Tabs ======
+  function setTab(name){
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+    ["rdv","history","clients","stats","catalog"].forEach(n => $("tab-" + n).classList.toggle("hidden", n !== name));
+  }
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", async () => {
+      const session = await refreshAuthUI();
+      if (!session) return;
+      setTab(t.dataset.tab);
+      if (t.dataset.tab === "catalog") await loadServices();
+      if (t.dataset.tab === "clients") await loadClients();
+      if (t.dataset.tab === "history") await loadHistory();
+      if (t.dataset.tab === "stats") await loadStats();
+      if (t.dataset.tab === "rdv") { await loadClientsIntoSelects(); await loadServicesIntoPicker(); renderLines(); }
+    });
+  });
+
+  // ====== AUTH ACTIONS ======
+  $("btnLogin").addEventListener("click", async () => {
+    const email = $("email").value.trim();
+    const password = $("password").value;
+    if (!email || !password){
+      setStatus($("loginStatus"), "Remplis email + mot de passe.", "err");
+      return;
+    }
+    try{
+      setStatus($("loginStatus"), "Connexion…", "");
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      await refreshAuthUI();
+      await loadClientsIntoSelects();
+      await loadServicesIntoPicker();
+      renderLines();
+    }catch(e){
+      setStatus($("loginStatus"), "Erreur: " + e.message, "err");
+    }
+  });
+
+  $("btnLogout").addEventListener("click", async () => {
+    try{
+      await supabase.auth.signOut();
+      showLoggedOutUI();
+      setStatus($("loginStatus"), "Déconnecté.", "");
+    }catch(e){
+      setStatus($("loginStatus"), "Erreur logout: " + e.message, "err");
+    }
+  });
+
+  $("btnPurge").addEventListener("click", async () => {
+    try{
+      localStorage.clear();
+      sessionStorage.clear();
+      showLoggedOutUI();
+      setStatus($("loginStatus"), "Session purgée. Recharge la page.", "");
+    }catch(e){
+      setStatus($("loginStatus"), "Erreur purge: " + e.message, "err");
+    }
+  });
+
+  // ====== LOADERS SELECTS ======
+  async function loadClientsIntoSelects(){
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    const { data, error } = await supabase
+      .from("clients")
+      .select("id,name,phone")
+      .order("name", { ascending:true });
+
+    if (error){
+      $("rdvClient").innerHTML = `<option value="">(table clients absente ?)</option>`;
+      $("histClient").innerHTML = `<option value="all">Tous</option>`;
+      return;
+    }
+
+    const options = (data || []).map(c => `<option value="${c.id}">${escapeHtml(c.name || "Sans nom")}</option>`).join("");
+    $("rdvClient").innerHTML = options || `<option value="">Aucune cliente</option>`;
+    $("histClient").innerHTML = `<option value="all">Tous</option>` + options;
+  }
+
+  async function loadServicesIntoPicker(){
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    const { data, error } = await supabase
+      .from("services")
+      .select("id,name,price,active")
+      .eq("active", true)
+      .order("name", { ascending:true });
+
+    if (error){
+      $("svcPick").innerHTML = `<option value="">(table services absente ?)</option>`;
+      return;
+    }
+
+    $("svcPick").innerHTML = (data || []).map(s =>
+      `<option value="${s.id}" data-price="${Number(s.price||0)}">${escapeHtml(s.name)} — ${euro(s.price)}</option>`
+    ).join("") || `<option value="">Aucune prestation (ajoute-en dans Catalogue)</option>`;
+  }
+
+  // ====== CLIENTS ======
+  $("btnAddClient").addEventListener("click", async () => {
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    const name = $("clientName").value.trim();
+    const phone = $("clientPhone").value.trim();
+    if (!name){
+      setStatus($("clientMsg"), "Saisis un nom.", "err");
+      return;
+    }
+
+    try{
+      const { error } = await supabase.from("clients").insert([{ name, phone: phone || null }]);
+      if (error) throw error;
+
+      $("clientName").value = "";
+      $("clientPhone").value = "";
+      setStatus($("clientMsg"), "Cliente ajoutée.", "ok");
+      await loadClients();
+      await loadClientsIntoSelects();
+    }catch(e){
+      setStatus($("clientMsg"), "Erreur: " + e.message, "err");
+    }
+  });
+
+  async function deleteClientDeep(client_id){
+    // supprime appointments + appointment_items de cette cliente, puis supprime la cliente
+    // (si RLS/policies permettent delete)
+    const { data: appts, error: apptErr } = await supabase
+      .from("appointments")
+      .select("id")
+      .eq("client_id", client_id);
+
+    if (apptErr) throw apptErr;
+
+    const ids = (appts || []).map(a => a.id);
+    if (ids.length){
+      const { error: itemsErr } = await supabase
+        .from("appointment_items")
+        .delete()
+        .in("appointment_id", ids);
+      if (itemsErr) throw itemsErr;
+
+      const { error: delApptErr } = await supabase
+        .from("appointments")
+        .delete()
+        .in("id", ids);
+      if (delApptErr) throw delApptErr;
+    }
+
+    const { error: delClientErr } = await supabase
+      .from("clients")
+      .delete()
+      .eq("id", client_id);
+    if (delClientErr) throw delClientErr;
+  }
+
+  async function loadClients(){
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    const { data, error } = await supabase
+      .from("clients")
+      .select("id,name,phone,created_at")
+      .order("name", { ascending:true });
+
+    if (error){
+      setStatus($("clientMsg"), "Erreur: " + error.message, "err");
+      $("clientList").innerHTML = "";
+      return;
+    }
+
+    setStatus($("clientMsg"), `Clientes: ${(data||[]).length}`, "");
+    $("clientList").innerHTML = (data||[]).map(c => `
+      <div class="item">
+        <div class="topline">
+          <div>
+            <div class="title">${escapeHtml(c.name||"Sans nom")}</div>
+            <div class="small">${c.phone ? escapeHtml(c.phone) : "—"}</div>
+          </div>
+          <span class="pill">${formatFRDateFromAny(c.created_at)}</span>
+        </div>
+        <div class="actions">
+          <button class="btn danger" data-del-client="${c.id}">Supprimer</button>
+        </div>
+      </div>
+    `).join("") || `<div class="small">Aucune cliente.</div>`;
+
+    $("clientList").querySelectorAll("[data-del-client]").forEach(btn=>{
+      btn.addEventListener("click", async () => {
+        const client_id = btn.getAttribute("data-del-client");
+        try{
+          // check si elle a des RDV
+          const { data: appts, error: apptErr } = await supabase
+            .from("appointments")
+            .select("id")
+            .eq("client_id", client_id)
+            .limit(1);
+          if (apptErr) throw apptErr;
+
+          const has = (appts||[]).length > 0;
+          const ok = has
+            ? confirm("Cette cliente a déjà des RDV. Supprimer la cliente supprimera aussi ses RDV. Continuer ?")
+            : confirm("Supprimer cette cliente ?");
+
+          if (!ok) return;
+
+          setStatus($("clientMsg"), "Suppression…", "");
+          await deleteClientDeep(client_id);
+
+          setStatus($("clientMsg"), "Cliente supprimée.", "ok");
+          await loadClients();
+          await loadClientsIntoSelects();
+          await loadHistory();
+          await loadStats();
+        }catch(e){
+          setStatus($("clientMsg"), "Erreur suppression: " + (e?.message || e), "err");
+        }
+      });
+    });
+  }
+
+  // ====== SERVICES (Catalogue) ======
+  $("btnAddService").addEventListener("click", async () => {
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    const name = $("svcName").value.trim();
+    const price = Number($("svcPrice").value);
+    if (!name || isNaN(price)){
+      setStatus($("svcMsg"), "Saisis un nom + un prix.", "err");
+      return;
+    }
+
+    try{
+      const { error } = await supabase.from("services").insert([{ name, price, active:true }]);
+      if (error) throw error;
+
+      $("svcName").value = "";
+      $("svcPrice").value = "";
+      setStatus($("svcMsg"), "Prestation ajoutée.", "ok");
+      await loadServices();
+      await loadServicesIntoPicker();
+    }catch(e){
+      setStatus($("svcMsg"), "Erreur: " + e.message, "err");
+    }
+  });
+
+  async function loadServices(){
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    const { data, error } = await supabase
+      .from("services")
+      .select("id,name,price,active,created_at")
+      .order("name", { ascending:true });
+
+    if (error){
+      setStatus($("svcMsg"), "Erreur: " + error.message, "err");
+      $("svcList").innerHTML = "";
+      return;
+    }
+
+    setStatus($("svcMsg"), `Prestations: ${(data||[]).length}`, "");
+    $("svcList").innerHTML = (data||[]).map(s => `
+      <div class="item">
+        <div class="topline">
+          <div>
+            <div class="title">${escapeHtml(s.name)}</div>
+            <div class="small">Prix: <b>${euro(s.price)}</b> — ${s.active ? "Active" : "Inactive"}</div>
+          </div>
+          <span class="pill">${formatFRDateFromAny(s.created_at)}</span>
+        </div>
+      </div>
+    `).join("") || `<div class="small">Aucune prestation.</div>`;
+  }
+
+  // ====== RDV LINES ======
+  let currentLines = []; // {service_id, name, qty, unit_price}
+  function recalcTotal(){
+    const total = currentLines.reduce((sum,l)=> sum + (Number(l.qty||0) * Number(l.unit_price||0)), 0);
+    $("rdvTotal").textContent = "Total RDV : " + euro(total);
+    return total;
+  }
+  function renderLines(){
+    const box = $("linesList");
+    if (!currentLines.length){
+      box.innerHTML = `<div class="small">Aucune prestation ajoutée.</div>`;
+      recalcTotal();
+      return;
+    }
+    box.innerHTML = currentLines.map((l, idx) => {
+      const lineTotal = Number(l.qty||0) * Number(l.unit_price||0);
+      return `
+        <div class="item">
+          <div class="topline">
+            <div>
+              <div class="title">${escapeHtml(l.name)}</div>
+              <div class="small">Qté: ${Number(l.qty)} — PU: ${euro(l.unit_price)} — Ligne: <b>${euro(lineTotal)}</b></div>
+            </div>
+            <div class="actions" style="margin-top:0;">
+              <button class="btn danger" data-del-line="${idx}">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    box.querySelectorAll("[data-del-line]").forEach(btn=>{
+      btn.addEventListener("click", () => {
+        const i = Number(btn.getAttribute("data-del-line"));
+        currentLines.splice(i,1);
+        renderLines();
+      });
+    });
+    recalcTotal();
+  }
+
+  $("btnAddLine").addEventListener("click", async () => {
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    const service_id = $("svcPick").value;
+    if (!service_id){
+      setStatus($("rdvStatusMsg"), "Ajoute d’abord des prestations dans Catalogue.", "err");
+      return;
+    }
+
+    const opt = $("svcPick").selectedOptions[0];
+    const svcName = opt ? opt.textContent.split("—")[0].trim() : "Prestation";
+    const qty = Math.max(1, Number($("svcQty").value || 1));
+    const priceOverrideRaw = $("svcPriceOverride").value.trim();
+
+    let unit_price;
+    if (priceOverrideRaw === ""){
+      unit_price = Number(opt?.getAttribute("data-price") || 0);
+    }else{
+      unit_price = Number(priceOverrideRaw);
+    }
+
+    if (isNaN(unit_price)){
+      setStatus($("rdvStatusMsg"), "Prix invalide.", "err");
+      return;
+    }
+
+    currentLines.push({ service_id, name: svcName, qty, unit_price });
+    $("svcQty").value = "1";
+    $("svcPriceOverride").value = "";
+    setStatus($("rdvStatusMsg"), "Prestation ajoutée.", "ok");
+    renderLines();
+  });
+
+  // ====== appointments date col robust ======
+  const APPT_TIME_CANDIDATES = ["at","date","datetime","date_time","rdv_at","start_at","starts_at","scheduled_at","when"];
+  async function selectAppointmentsBase(){
+    for (const timeCol of APPT_TIME_CANDIDATES){
+      const cols = `id,client_id,status,posted,notes,created_at,${timeCol}`;
+      const { error } = await supabase.from("appointments").select(cols).limit(1);
+      if (!error) return { timeCol };
+    }
+    return { timeCol: null };
+  }
+
+  // ====== SAVE RDV ======
+  $("btnSaveRDV").addEventListener("click", async () => {
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    const client_id = $("rdvClient").value;
+    const dt = $("rdvDate").value;
+    const status = $("rdvStatus").value;
+    const posted = $("rdvPosted").value === "true";
+    const notes = $("rdvNotes").value.trim() || null;
+
+    if (!client_id){ setStatus($("rdvStatusMsg"), "Choisis une cliente.", "err"); return; }
+    if (!dt){ setStatus($("rdvStatusMsg"), "Choisis une date/heure.", "err"); return; }
+    if (!currentLines.length){ setStatus($("rdvStatusMsg"), "Ajoute au moins une prestation.", "err"); return; }
+
+    try{
+      setStatus($("rdvStatusMsg"), "Enregistrement…", "");
+
+      const { timeCol } = await selectAppointmentsBase();
+      if (!timeCol) throw new Error("Impossible de trouver la colonne date/heure dans 'appointments'.");
+
+      const apptPayload = { client_id, status, posted, notes };
+      apptPayload[timeCol] = new Date(dt).toISOString();
+
+      const { data: apptIns, error: apptErr } = await supabase
+        .from("appointments")
+        .insert([apptPayload])
+        .select("id")
+        .single();
+      if (apptErr) throw apptErr;
+
+      const appointment_id = apptIns.id;
+
+      const linesPayload = currentLines.map(l => ({
+        appointment_id,
+        service_id: l.service_id,
+        qty: Number(l.qty),
+        unit_price: Number(l.unit_price)
+      }));
+
+      const { error: linesErr } = await supabase.from("appointment_items").insert(linesPayload);
+      if (linesErr) throw linesErr;
+
+      currentLines = [];
+      renderLines();
+      $("rdvNotes").value = "";
+      setStatus($("rdvStatusMsg"), "RDV enregistré.", "ok");
+
+      await loadHistory();
+      await loadStats();
+    }catch(e){
+      setStatus($("rdvStatusMsg"), "Erreur: " + (e?.message || e), "err");
+    }
+  });
+
+  // ====== DELETE RDV (Historique) ======
+  async function deleteAppointmentDeep(appointment_id){
+    const { error: itemsErr } = await supabase
+      .from("appointment_items")
+      .delete()
+      .eq("appointment_id", appointment_id);
+    if (itemsErr) throw itemsErr;
+
+    const { error: apptErr } = await supabase
+      .from("appointments")
+      .delete()
+      .eq("id", appointment_id);
+    if (apptErr) throw apptErr;
+  }
+
+  // ====== HISTORIQUE ======
+  $("btnRefreshHistory").addEventListener("click", async () => {
+    const session = await refreshAuthUI();
+    if (!session) return;
+    await loadHistory();
+  });
+
+  async function loadHistory(){
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    setStatus($("histMsg"), "Chargement…", "");
+    $("histList").innerHTML = "";
+
+    try{
+      await loadClientsIntoSelects();
+
+      const { timeCol } = await selectAppointmentsBase();
+      if (!timeCol) throw new Error("Colonne date/heure introuvable dans appointments.");
+
+      const clientFilter = $("histClient").value || "all";
+      const statusFilter = $("histStatus").value || "all";
+
+      let q = supabase
+        .from("appointments")
+        .select(`id,client_id,status,posted,notes,created_at,${timeCol}`)
+        .order(timeCol, { ascending:false });
+
+      if (clientFilter !== "all") q = q.eq("client_id", clientFilter);
+      if (statusFilter !== "all") q = q.eq("status", statusFilter);
+
+      const { data: appts, error } = await q;
+      if (error) throw error;
+
+      const appointments = appts || [];
+      if (!appointments.length){
+        $("histSummary").textContent = "RDV affichés: 0";
+        setStatus($("histMsg"), "—", "");
+        $("histList").innerHTML = `<div class="small">Aucun RDV.</div>`;
+        return;
+      }
+
+      const { data: clientsData } = await supabase.from("clients").select("id,name");
+      const clientMap = new Map((clientsData||[]).map(c => [c.id, c.name]));
+
+      const ids = appointments.map(a => a.id);
+      const { data: items, error: itemsErr } = await supabase
+        .from("appointment_items")
+        .select("appointment_id,service_id,qty,unit_price")
+        .in("appointment_id", ids);
+      if (itemsErr) throw itemsErr;
+
+      const svcIds = Array.from(new Set((items||[]).map(i => i.service_id).filter(Boolean)));
+      let servicesMap = new Map();
+      if (svcIds.length){
+        const { data: svcs, error: svcsErr } = await supabase
+          .from("services")
+          .select("id,name")
+          .in("id", svcIds);
+        if (svcsErr) throw svcsErr;
+        servicesMap = new Map((svcs||[]).map(s => [s.id, s.name]));
+      }
+
+      const byAppt = new Map();
+      for (const it of (items||[])){
+        const arr = byAppt.get(it.appointment_id) || [];
+        arr.push(it);
+        byAppt.set(it.appointment_id, arr);
+      }
+
+      let countDone = 0;
+      let caDone = 0;
+
+      $("histList").innerHTML = appointments.map(a => {
+        const arr = byAppt.get(a.id) || [];
+        const total = arr.reduce((sum,it)=> sum + Number(it.qty||0)*Number(it.unit_price||0), 0);
+
+        if (a.status === "done"){ countDone++; caDone += total; }
+
+        const dtVal = a[timeCol] || a.created_at;
+        const dtTxt = formatFRDateFromAny(dtVal);
+        const cname = clientMap.get(a.client_id) || "—";
+
+        const statusPill = a.status === "done"
+          ? `<span class="pill done">done</span>`
+          : `<span class="pill pending">pending</span>`;
+
+        const linesTxt = arr.map(it => {
+          const nm = servicesMap.get(it.service_id) || "Prestation";
+          const lineTot = Number(it.qty||0)*Number(it.unit_price||0);
+          return `• ${escapeHtml(nm)} (${Number(it.qty||0)} × ${euro(it.unit_price)}) = ${euro(lineTot)}`;
+        }).join("<br>");
+
+        return `
+          <div class="item" data-appt="${a.id}">
+            <div class="topline">
+              <div>
+                <div class="title">${escapeHtml(cname)} ${statusPill}</div>
+                <div class="small">${dtTxt} — Total: <b>${euro(total)}</b> — Posté: ${a.posted ? "oui" : "non"}</div>
+              </div>
+            </div>
+
+            <div class="small" style="margin-top:8px;">${linesTxt || "—"}</div>
+
+            <div class="actions">
+              <button class="btn danger" data-del-appt="${a.id}">Supprimer</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      $("histList").querySelectorAll("[data-del-appt]").forEach(btn=>{
+        btn.addEventListener("click", async () => {
+          const apptId = btn.getAttribute("data-del-appt");
+          const ok = confirm("Supprimer ce RDV ? (les prestations associées seront supprimées)");
+          if (!ok) return;
+
+          try{
+            setStatus($("histMsg"), "Suppression…", "");
+            await deleteAppointmentDeep(apptId);
+            setStatus($("histMsg"), "RDV supprimé.", "ok");
+            await loadHistory();
+            await loadStats();
+          }catch(e){
+            setStatus($("histMsg"), "Erreur suppression: " + (e?.message || e), "err");
+          }
+        });
+      });
+
+      $("histSummary").textContent =
+        `RDV affichés: ${appointments.length} | RDV "Fait": ${countDone} | CA (faits): ${euro(caDone)}`;
+      setStatus($("histMsg"), "—", "");
+    }catch(e){
+      setStatus($("histMsg"), "Erreur: " + (e?.message || e), "err");
+      $("histSummary").textContent = "—";
+      $("histList").innerHTML = "";
+    }
+  }
+
+  // ====== STATS ======
+  $("btnRefreshStats").addEventListener("click", async () => {
+    const session = await refreshAuthUI();
+    if (!session) return;
+    await loadStats();
+  });
+
+  async function loadStats(){
+    const session = await refreshAuthUI();
+    if (!session) return;
+
+    setStatus($("statsMsg"), "Chargement…", "");
+    $("statsTop").innerHTML = "";
+
+    try{
+      const { timeCol } = await selectAppointmentsBase();
+      if (!timeCol) throw new Error("Colonne date/heure introuvable dans appointments.");
+
+      const { data: appts, error: apptErr } = await supabase
+        .from("appointments")
+        .select(`id,status,${timeCol}`)
+        .order(timeCol, { ascending:false });
+      if (apptErr) throw apptErr;
+
+      const appointments = appts || [];
+      if (!appointments.length){
+        $("statsSummary").textContent = "Aucun RDV.";
+        setStatus($("statsMsg"), "—", "");
+        return;
+      }
+
+      const ids = appointments.map(a => a.id);
+
+      const { data: items, error: itemsErr } = await supabase
+        .from("appointment_items")
+        .select("appointment_id,service_id,qty,unit_price")
+        .in("appointment_id", ids);
+      if (itemsErr) throw itemsErr;
+
+      const apptStatusMap = new Map(appointments.map(a => [a.id, a.status]));
+      let caAll = 0;
+      let caDone = 0;
+
+      const byService = new Map();
+      for (const it of (items||[])){
+        const line = Number(it.qty||0) * Number(it.unit_price||0);
+        caAll += line;
+        if (apptStatusMap.get(it.appointment_id) === "done") caDone += line;
+
+        const cur = byService.get(it.service_id) || { qty:0, ca:0 };
+        cur.qty += Number(it.qty||0);
+        cur.ca += line;
+        byService.set(it.service_id, cur);
+      }
+
+      const svcIds = Array.from(byService.keys()).filter(Boolean);
+      let servicesMap = new Map();
+      if (svcIds.length){
+        const { data: svcs, error: svcsErr } = await supabase
+          .from("services")
+          .select("id,name")
+          .in("id", svcIds);
+        if (svcsErr) throw svcsErr;
+        servicesMap = new Map((svcs||[]).map(s => [s.id, s.name]));
+      }
+
+      const top = Array.from(byService.entries())
+        .map(([service_id, v]) => ({ service_id, ...v, name: servicesMap.get(service_id) || "Prestation" }))
+        .sort((a,b)=> b.ca - a.ca)
+        .slice(0, 8);
+
+      $("statsSummary").textContent =
+        `RDV: ${appointments.length} | CA total: ${euro(caAll)} | CA (faits): ${euro(caDone)}`;
+
+      $("statsTop").innerHTML = top.map(t => `
+        <div class="item">
+          <div class="topline">
+            <div>
+              <div class="title">${escapeHtml(t.name)}</div>
+              <div class="small">Qté: ${t.qty} — CA: <b>${euro(t.ca)}</b></div>
+            </div>
+          </div>
+        </div>
+      `).join("") || `<div class="small">Pas assez de données.</div>`;
+
+      setStatus($("statsMsg"), "—", "");
+    }catch(e){
+      setStatus($("statsMsg"), "Erreur: " + (e?.message || e), "err");
+      $("statsSummary").textContent = "—";
+      $("statsTop").innerHTML = "";
+    }
+  }
+
+  // ====== INIT ======
+  (async function init(){
+    showLoggedOutUI();
+    const session = await refreshAuthUI();
+    if (session){
+      await loadClientsIntoSelects();
+      await loadServicesIntoPicker();
+      renderLines();
+    }
+  })();
+
+})();
+</script>
+</body>
+</html>
